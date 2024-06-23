@@ -5,6 +5,7 @@ import userRouter from './routes/userRoute.js';
 import authRouter from './routes/authRoute.js';
 
 dotenv.config();
+
 mongoose.connect(process.env.MONGO)
 .then(() => {
     console.log('Connected to MONGODB');
