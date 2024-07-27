@@ -1,51 +1,89 @@
-import Listing from '../models/listingModel.js';
-import { errorHandler } from '../utils/error.js';
+import mongoose from "mongoose"; 
+import Listing from "../models/listingModel.js";
+import { errorHandler } from "../utils/error.js";
 
-export const createListing = async (req,res,next) => {
-    try {
-     const listing = await Listing.create(req.body);
-     return res.status(201).json(listing);
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const deleteListing = async (req, res, next) => {
-    const listing = await Listing.findById(req.params.id);
-  
-    if (!listing) {
-      return next(errorHandler(404, 'Listing not found!'));
-    }
-  
-    if (req.user.id !== listing.userRef) {
-      return next(errorHandler(401, 'You can only delete your own listings!'));
-    }
-  
-    try {
-      await Listing.findByIdAndDelete(req.params.id);
-      res.status(200).json('Listing has been deleted!');
-    } catch (error) {
-      next(error);
-    }
-  };
-
-export const updateListing = async (req, res, next) => {
-  const listing = await Listing.findById(req.params.id);
-  if(!listing) {
-    return next (errorHandler(404, 'Listing not found!'));
-  }
-  if (req.user.id !== listing.userRef) {
-    return next(errorHandler(401, " you can only update your own listings!"));
-  }
+export const createListing = async (req, res, next) => {
   try {
-    const updatedListing = await Listing.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-    );
-    res.status(200).json(updatedListing);
-  }
-  catch (error) {
+    const listing = await Listing.create(req.body);
+    return res.status(201).json(listing);
+  } catch (error) {
     next(error);
   }
 };
+
+export const deleteListing = async (req, res, next) => {
+  let listing; 
+  try {
+    listing = await Listing.findById(req.params.id);
+  } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      return next(errorHandler(404, "Listing not found!")); // <--- Added this line
+    }
+    return next(error);
+  } 
+
+  if (!listing) {
+    return next(errorHandler(404, "Listing not found!"));
+  }
+
+  if (req.user.id !== listing.userRef) {
+    return next(errorHandler(401, "You can only delete your own listings!"));
+  }
+
+  try {
+    await Listing.findByIdAndDelete(req.params.id);
+    res.status(200).json("Listing has been deleted!");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateListing = async (req, res, next) => {
+  let listing;
+  try {
+    listing = await Listing.findById(req.params.id);
+  } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      return next(errorHandler(404, "Listing not found!")); // <--- Added this line
+    }
+    return next(error);
+  } 
+
+  if (!listing) {
+    return next(errorHandler(404, "Listing not found!"));
+  }
+
+  if (req.user.id !== listing.userRef) {
+    return next(errorHandler(401, "You can only update your own listings!"));
+  }
+
+  try {
+    const updatedListing = await Listing.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.status(200).json(updatedListing);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+export const getListing = async (req, res, next) => {
+  let listing; 
+  try { 
+   listing = await Listing.findById(req.params.id);
+  } catch (error) {
+    if (error instanceof mongoose.Error.CastError) { 
+      return next(errorHandler(404, 'Listing not found!')); 
+    }
+    return next(error); 
+  } 
+  if (!listing) {
+    return next(errorHandler(404, 'Listing not found!'));
+  }
+  res.status(200).json(listing);
+};
+
